@@ -1,7 +1,7 @@
 <phpunit backupGlobals="true" bootstrap="../tests/bootstrap.php" cacheResultFile="./Coverage/.phpunit.result.cache">
     <testsuites>
         <testsuite name="unit">
-            <directory>.</directory>
+            <directory>../tests</directory>
         </testsuite>
     </testsuites>
     <coverage
