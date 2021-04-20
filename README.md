@@ -1,7 +1,7 @@
 ![FEAST Framework](https://github.com/FeastFramework/framework/blob/master/logos/feast-transparent-small.png?raw=true)
 
 [![Packagist](https://img.shields.io/packagist/v/feast/pusher)](https://packagist.org/packages/feast/pusher)
-![License](https://img.shields.io/packagist/l/feast/pusher.svg)
+![License](https://img.shields.io/github/license/FeastFramework/pusher.svg)
 [![Docs](https://img.shields.io/badge/docs-quickstart-green.svg)](https://docs.feast-framework.com)
 
 # FEAST Pusher Plugin

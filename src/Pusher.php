@@ -19,26 +19,22 @@ declare(strict_types=1);
 
 namespace FeastFramework\Pusher;
 
-use Feast\Plugin;
 use Feast\ServiceContainer\ServiceContainerItemInterface;
-use Feast\View;
+use FeastFramework\Pusher\Response\BatchEvent;
+use FeastFramework\Pusher\Response\Channel;
+use FeastFramework\Pusher\Response\Channels;
+use FeastFramework\Pusher\Response\Event;
+use FeastFramework\Pusher\Response\Users;
 use stdClass;
 
-class Pusher extends Plugin implements ServiceContainerItemInterface
+class Pusher implements ServiceContainerItemInterface
 {
 
     /**
      * @var array<\FeastFramework\Pusher\PusherService>
      */
     protected array $pusherConnections = [];
-
-    /**
-     * @throws \Feast\ServiceContainer\NotFoundException
-     */
-    public function __construct()
-    {
-        parent::__construct(di(View::class));
-    }
+    
 
     /**
      * Get information for users
@@ -47,10 +43,10 @@ class Pusher extends Plugin implements ServiceContainerItemInterface
      * 
      * @param string $channel Channel name to fetch information for.
      * @param string $pusherConfigNamespace Configuration namespace to load connection info for. Defaults to 'pusher'.
-     * @return \stdClass|null
-     * @throws \Feast\Exception\ServerFailureException
+     * @return Users|null
+     * @throws \Feast\Exception\ServerFailureException|\ReflectionException
      */
-    public function getUsers(string $channel, string $pusherConfigNamespace = 'pusher'): ?stdClass
+    public function getUsers(string $channel, string $pusherConfigNamespace = 'pusher'): ?Users
     {
         $pusher = $this->getPusherService($pusherConfigNamespace);
         return $pusher->getUsers($channel);
@@ -63,10 +59,10 @@ class Pusher extends Plugin implements ServiceContainerItemInterface
      *
      * @param array<array> $eventData See Pusher documentation for more info.
      * @param string $pusherConfigNamespace Configuration namespace to load connection info for. Defaults to 'pusher'.
-     * @return \stdClass|null
-     * @throws \Feast\Exception\ServerFailureException
+     * @return BatchEvent|null
+     * @throws \Feast\Exception\ServerFailureException|\ReflectionException
      */
-    public function batchEvents(array $eventData, string $pusherConfigNamespace = 'pusher'): ?stdClass
+    public function batchEvents(array $eventData, string $pusherConfigNamespace = 'pusher'): ?BatchEvent
     {
         $pusher = $this->getPusherService($pusherConfigNamespace);
         return $pusher->batchEvents($eventData);
@@ -80,10 +76,10 @@ class Pusher extends Plugin implements ServiceContainerItemInterface
      * @param string $channel Channel name to fetch information for.
      * @param array $infoType The information type to fetch. Valid options are currently 'user_count' and 'subscription_count'.
      * @param string $pusherConfigNamespace Configuration namespace to load connection info for. Defaults to 'pusher'.
-     * @return \stdClass|null
-     * @throws \Feast\Exception\ServerFailureException
+     * @return Channel|null
+     * @throws \Feast\Exception\ServerFailureException|\ReflectionException
      */
-    public function channelInfo(string $channel, array $infoType, string $pusherConfigNamespace = 'pusher'): ?stdClass
+    public function channelInfo(string $channel, array $infoType, string $pusherConfigNamespace = 'pusher'): ?Channel
     {
         $pusher = $this->getPusherService($pusherConfigNamespace);
         return $pusher->getChannelInfo($channel,$infoType);
@@ -97,10 +93,10 @@ class Pusher extends Plugin implements ServiceContainerItemInterface
      * @param string|null $prefix Filters returned channels by specified prefix.
      * @param array|null $infoType The information type to fetch. Valid option currently only 'user_count'.
      * @param string $pusherConfigNamespace Configuration namespace to load connection info for. Defaults to 'pusher'.
-     * @return \stdClass|null
-     * @throws \Feast\Exception\ServerFailureException
+     * @return \FeastFramework\Pusher\Response\Channels|null
+     * @throws \Feast\Exception\ServerFailureException|\ReflectionException
      */
-    public function channelsInfo(string $prefix = null, ?array $infoType = null, string $pusherConfigNamespace = 'pusher'): ?stdClass
+    public function channelsInfo(string $prefix = null, ?array $infoType = null, string $pusherConfigNamespace = 'pusher'): ?Channels
     {
         $pusher = $this->getPusherService($pusherConfigNamespace);
         return $pusher->getChannelsInfo($prefix,$infoType);
@@ -117,8 +113,8 @@ class Pusher extends Plugin implements ServiceContainerItemInterface
      * @param string|null $socketId Exclude the event from the given socket id
      * @param array|null $info List of attributes which should be returned for each unique channel triggered to. Currently valid values are user_count and subscription_count.
      * @param string $pusherConfigNamespace Configuration namespace to load connection info for. Defaults to 'pusher'.
-     * @return \stdClass|null
-     * @throws \Feast\Exception\ServerFailureException
+     * @return Event|null
+     * @throws \Feast\Exception\ServerFailureException|\ReflectionException
      */
     public function event(
         string $name,
@@ -127,7 +123,7 @@ class Pusher extends Plugin implements ServiceContainerItemInterface
         ?string $socketId = null,
         ?array $info = null,
         string $pusherConfigNamespace = 'pusher'
-    ): ?stdClass {
+    ): ?Event {
         $pusher = $this->getPusherService($pusherConfigNamespace);
         return $pusher->event($name, $data, $channels, $socketId, $info);
     }

@@ -6,6 +6,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -25,8 +26,14 @@ use Feast\Exception\InvalidArgumentException;
 use Feast\Exception\InvalidOptionException;
 use Feast\Exception\ServerFailureException;
 use Feast\Interfaces\ConfigInterface;
+use Feast\Json;
 use Feast\Service;
 use Feast\ServiceContainer\NotFoundException;
+use FeastFramework\Pusher\Response\BatchEvent;
+use FeastFramework\Pusher\Response\Channel;
+use FeastFramework\Pusher\Response\Channels;
+use FeastFramework\Pusher\Response\Event;
+use FeastFramework\Pusher\Response\Users;
 use stdClass;
 
 class PusherService extends Service
@@ -54,7 +61,7 @@ class PusherService extends Service
     {
         /** @var stdClass $config */
         $config = di(ConfigInterface::class)->getSetting($configNamespace);
-        if (empty($config->cluser) || empty($config->key) || empty($config->appid) || empty($config->secret)) {
+        if (empty($config->cluster) || empty($config->key) || empty($config->appid) || empty($config->secret)) {
             throw new InvalidArgumentException(
                 'Invalid pusher configuration key: ' . $configNamespace . '. Please ensure all keys are set.' . "\n" . 'Required keys: cluster, key, secret, appid'
             );
@@ -74,14 +81,20 @@ class PusherService extends Service
      * https://pusher.com/docs/channels/library_auth_reference/rest-api#get-users
      *
      * @param string $channel Channel name to fetch information for.
-     * @return \stdClass|null
-     * @throws \Feast\Exception\ServerFailureException
+     * @return Users|null
+     * @throws \Feast\Exception\ServerFailureException|\ReflectionException
      */
-    public function getUsers(string $channel): ?stdClass
+    public function getUsers(string $channel): ?Users
     {
         $this->makeRequest('/apps/' . $this->appId . '/channels/' . $channel . '/users');
 
-        return $this->httpRequest->getResponseAsJson();
+        $response = $this->httpRequest->getResponseAsJson();
+        if ($response === null) {
+            return null;
+        }
+        /** @var Users $response */
+        $response = Json::unmarshal($this->httpRequest->getResponseAsString(), Users::class);
+        return $response;
     }
 
     /**
@@ -90,18 +103,24 @@ class PusherService extends Service
      * https://pusher.com/docs/channels/library_auth_reference/rest-api#post-batch-events-trigger-multiple-events-
      *
      * @param array<array> $eventData See Pusher documentation for more info.
-     * @return \stdClass|null
-     * @throws \Feast\Exception\ServerFailureException
+     * @return BatchEvent|null
+     * @throws \Feast\Exception\ServerFailureException|\ReflectionException
      */
     public function batchEvents(
         array $eventData
-    ): ?stdClass {
+    ): ?BatchEvent {
         $requestData = [
             'batch' => $eventData
         ];
         $this->makeRequest('/apps/' . $this->appId . '/batch_events', RequestMethod::POST, $requestData);
 
-        return $this->httpRequest->getResponseAsJson();
+        $response = $this->httpRequest->getResponseAsJson();
+        if ($response === null) {
+            return null;
+        }
+        /** @var BatchEvent $response */
+        $response = Json::unmarshal($this->httpRequest->getResponseAsString(), BatchEvent::class);
+        return $response;
     }
 
     /**
@@ -114,8 +133,8 @@ class PusherService extends Service
      * @param string|array $channels Either a single channel name as a string or an array of channels to publish to.
      * @param string|null $socketId Exclude the event from the given socket id
      * @param array|null $info List of attributes which should be returned for each unique channel triggered to. Currently valid values are user_count and subscription_count.
-     * @return \stdClass|null
-     * @throws \Feast\Exception\ServerFailureException
+     * @return Event|null
+     * @throws \Feast\Exception\ServerFailureException|\ReflectionException
      */
     public function event(
         string $name,
@@ -123,7 +142,7 @@ class PusherService extends Service
         string|array $channels,
         ?string $socketId = null,
         ?array $info = null
-    ): ?stdClass {
+    ): ?Event {
         $requestData = [
             'name' => $name,
             'data' => json_encode($data),
@@ -143,7 +162,13 @@ class PusherService extends Service
 
         $this->makeRequest('/apps/' . $this->appId . '/events', RequestMethod::POST, $requestData);
 
-        return $this->httpRequest->getResponseAsJson();
+        $response = $this->httpRequest->getResponseAsJson();
+        if ($response === null) {
+            return null;
+        }
+        /** @var Event $response */
+        $response = Json::unmarshal($this->httpRequest->getResponseAsString(), Event::class);
+        return $response;
     }
 
     /**
@@ -153,17 +178,23 @@ class PusherService extends Service
      *
      * @param string $channel Channel name to fetch information for.
      * @param array $infoType The information type to fetch. Valid options are currently 'user_count' and 'subscription_count'.
-     * @return \stdClass|null
-     * @throws \Feast\Exception\ServerFailureException
+     * @return Channel|null
+     * @throws \Feast\Exception\ServerFailureException|\ReflectionException
      */
-    public function getChannelInfo(string $channel, array $infoType): ?stdClass
+    public function getChannelInfo(string $channel, array $infoType): ?Channel
     {
         $this->makeRequest(
             '/apps/' . $this->appId . '/channels/' . $channel,
             arguments: ['info' => implode(',', $infoType)]
         );
 
-        return $this->httpRequest->getResponseAsJson();
+        $response = $this->httpRequest->getResponseAsJson();
+        if ($response === null) {
+            return null;
+        }
+        /** @var Channel $response */
+        $response = Json::unmarshal($this->httpRequest->getResponseAsString(), Channel::class);
+        return $response;
     }
 
     /**
@@ -173,10 +204,10 @@ class PusherService extends Service
      *
      * @param string|null $prefix Filters returned channels by specified prefix.
      * @param array|null $infoType The information type to fetch. Valid option currently only 'user_count'.
-     * @return \stdClass|null
-     * @throws \Feast\Exception\ServerFailureException
+     * @return Channels|null
+     * @throws \Feast\Exception\ServerFailureException|\ReflectionException
      */
-    public function getChannelsInfo(?string $prefix = null, ?array $infoType = null): ?stdClass
+    public function getChannelsInfo(?string $prefix = null, ?array $infoType = null): ?Channels
     {
         $arguments = [];
         if ($prefix !== null) {
@@ -187,7 +218,13 @@ class PusherService extends Service
         }
         $this->makeRequest('/apps/' . $this->appId . '/channels', arguments: $arguments);
 
-        return $this->httpRequest->getResponseAsJson();
+        $response = $this->httpRequest->getResponseAsJson();
+        if ($response === null) {
+            return null;
+        }
+        /** @var Channels $response */
+        $response = Json::unmarshal($this->httpRequest->getResponseAsString(), Channels::class);
+        return $response;
     }
 
     protected function initRequest(

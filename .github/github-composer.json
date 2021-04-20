@@ -12,7 +12,8 @@
     }
   ],
   "require": {
-    "php": "^8.0.0"
+    "php": "^8.0.0",
+    "feast/framework": "~1.1"
   },
   "autoload": {
     "psr-4": {
