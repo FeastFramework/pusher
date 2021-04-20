@@ -31,7 +31,7 @@ jobs:
 
 
       - name: Run PHPUnit
-        run: phpunit -c FeastTests/githubphpunit.xml --coverage-clover coverage.xml
+        run: phpunit -c .github/phpunit.xml --coverage-clover coverage.xml
       - uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
