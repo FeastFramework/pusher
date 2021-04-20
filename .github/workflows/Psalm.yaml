@@ -7,7 +7,7 @@ jobs:
     name: Psalm
     runs-on: ubuntu-latest
     env:
-      COMPOSER: '../github-composer.json'
+      COMPOSER: '.github/github-composer.json'
     steps:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
