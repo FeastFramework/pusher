@@ -5,8 +5,8 @@ on: [push, pull_request]
 jobs:
   build-test:
     runs-on: ubuntu-latest
-    env: 
-      COMPOSER: 'github-composer.json composer install'
+    env:
+      COMPOSER: '../github-composer.json'
     steps:
       - uses: actions/checkout@v2
       - uses: shivammathur/setup-php@v2
